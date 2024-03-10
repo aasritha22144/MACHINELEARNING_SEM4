@@ -1,34 +1,55 @@
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 
-data = pd.read_excel(r"C:\Users\aasri\Desktop\ASSIGNMENT _ 6\Transactions.xlsx")
+def step_activation(x):
+    return 1 if x >= 0 else 0
 
-X = data.drop('label', axis=1)
-y = data['label']
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def bipolar_step_activation(x):
+    return 1 if x >= 0 else -1
 
 def sigmoid_activation(x):
     return 1 / (1 + np.exp(-x))
 
-def perceptron_classification(X, y, weights, learning_rate, max_epochs):
+def relu_activation(x):
+    return max(0, x)
+
+def perceptron_gate(X, y, weights, activation, learning_rate, max_epochs):
+    errors = []
     for epoch in range(max_epochs):
-        for x, target in zip(X.values, y):
-            output = sigmoid_activation(np.dot(weights, x))
+        total_error = 0
+        for x, target in zip(X, y):
+            output = activation(np.dot(weights, x))
             error = target - output
+            total_error += error**2
             weights += learning_rate * error * x
-    return weights
+        errors.append(total_error)
+        if total_error == 0:
+            break
+    print(f"Weights: {weights}, Epochs: {epoch + 1}")
+    return weights, errors
 
-initial_weights = np.array([0.5, 0.3, 0.2])
+X_and = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_and = np.array([0, 0, 0, 1])
 
-learning_rate = 0.01
+weights_and = np.random.rand(2)  
+learning_rate = 0.1
+max_epochs = 100
 
-max_epochs = 1000
+# Using step activation function
+weights_and_step, errors_and_step = perceptron_gate(X_and, y_and, weights_and, step_activation, learning_rate, max_epochs)
+print("Final Weights for AND Gate (Step Activation):", weights_and_step)
+print("Errors during training (Step Activation):", errors_and_step)
 
-trained_weights = perceptron_classification(X_train, y_train, initial_weights, learning_rate, max_epochs)
+# Using bipolar step activation function
+weights_and_bipolar, errors_and_bipolar = perceptron_gate(X_and, y_and, weights_and, bipolar_step_activation, learning_rate, max_epochs)
+print("Final Weights for AND Gate (Bipolar Step Activation):", weights_and_bipolar)
+print("Errors during training (Bipolar Step Activation):", errors_and_bipolar)
 
-predictions = [sigmoid_activation(np.dot(trained_weights, x)) for x in X_test.values]
+# Using sigmoid activation function
+weights_and_sigmoid, errors_and_sigmoid = perceptron_gate(X_and, y_and, weights_and, sigmoid_activation, learning_rate, max_epochs)
+print("Final Weights for AND Gate (Sigmoid Activation):", weights_and_sigmoid)
+print("Errors during training (Sigmoid Activation):", errors_and_sigmoid)
 
-accuracy = np.mean((predictions >= 0.5) == y_test.values)
-print("Accuracy:", accuracy)
+# Using ReLU activation function
+weights_and_relu, errors_and_relu = perceptron_gate(X_and, y_and, weights_and, relu_activation, learning_rate, max_epochs)
+print("Final Weights for AND Gate (ReLU Activation):", weights_and_relu)
+print("Errors during training (ReLU Activation):", errors_and_relu)
