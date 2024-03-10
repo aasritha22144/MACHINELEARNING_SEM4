@@ -1,31 +1,41 @@
 import numpy as np
 
-def sigmoid_activation(x):
+# Load the data from the CSV file
+data = np.genfromtxt('Transactions.csv', delimiter=',', skip_header=1, dtype=str)
+
+# Separate the features and labels
+X = np.column_stack((data[:, 1:4].astype(float), data[:, 4].astype(float)))
+y = (data[:, -1] == 'Yes').astype(int)
+
+# Add a bias term to the features
+X = np.hstack((np.ones((X.shape[0], 1)), X))
+
+# Initialize the weights and learning rate
+weights = np.zeros(X.shape[1])
+learning_rate = 0.1
+
+# Define the sigmoid activation function
+def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def perceptron_customer_classification(X, y, weights, learning_rate, max_epochs):
-    errors = []
-    for epoch in range(max_epochs):
-        total_error = 0
-        for x, target in zip(X, y):
-            output = sigmoid_activation(np.dot(weights, x))
-            error = target - output
-            total_error += error**2
-            weights += learning_rate * error * x
-        errors.append(total_error)
-        if total_error <= 0.002:
-            break
-    return weights, errors
+# Define the perceptron training function
+def train_perceptron(X, y, weights, learning_rate, num_epochs):
+    for epoch in range(num_epochs):
+        y_pred = sigmoid(np.dot(X, weights))
+        error = y - y_pred
+        weights += learning_rate * np.dot(X.T, error)
+    return weights
 
-X_customer = np.array([[20, 6, 2], [16, 3, 6], [27, 6, 2], [19, 1, 2], [24, 4, 2], [22, 1, 5], [15, 4, 2], [18, 4, 2], [21, 1, 4], [16, 2, 4]])
-y_customer = np.array([1, 1, 1, 0, 1, 0, 1, 1, 0, 0])
+# Train the perceptron
+num_epochs = 1000
+final_weights = train_perceptron(X, y, weights, learning_rate, num_epochs)
 
-weights_initial = np.random.rand(3)
+# Evaluate the perceptron on the training data
+y_pred = sigmoid(np.dot(X, final_weights))
+y_pred = (y_pred >= 0.5).astype(int)
+accuracy = np.mean(y_pred == y)
+print(f"Training accuracy: {accuracy * 100:.2f}%")
 
-learning_rate = 0.1
-max_epochs = 100
-
-final_weights, errors = perceptron_customer_classification(X_customer, y_customer, weights_initial, learning_rate, max_epochs)
-
-print("Final Weights:", final_weights)
-print("Errors during training:", errors)
+# Print the final weights
+print("Final weights:")
+print(final_weights)
